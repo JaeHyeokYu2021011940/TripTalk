@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   TextInput,
@@ -8,10 +8,10 @@ import {
   Alert,
   NativeModules,
 } from 'react-native';
- 
+
 export default function App() {
   const [kakaoText, setKakaoText] = useState('');
- 
+
   useEffect(() => {
     // 공유로 넘어온 텍스트 받기
     if (NativeModules.IntentModule) {
@@ -20,7 +20,7 @@ export default function App() {
       });
     }
   }, []);
- 
+
   const pickFile = () => {
     if (NativeModules.IntentModule) {
       NativeModules.IntentModule.openFilePicker(text => {
@@ -29,15 +29,35 @@ export default function App() {
       });
     }
   };
- 
+  const sendToServer = async () => {
+    try {
+      const response = await fetch('http://10.0.2.2:8000/api/kakao/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          kakao_text: kakaoText,
+        }),
+      });
+
+      const data = await response.json();
+
+      console.log('서버 응답:', data);
+      Alert.alert('성공', '서버로 텍스트를 보냈어요.');
+    } catch (error) {
+      console.error('에러 발생:', error);
+      Alert.alert('오류', '서버 전송에 실패했어요.');
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>여행 타임라인</Text>
- 
+
       <TouchableOpacity style={styles.fileButton} onPress={pickFile}>
         <Text style={styles.fileButtonText}>📂 txt 파일 선택</Text>
       </TouchableOpacity>
- 
+
       <Text style={styles.label}>카카오톡 대화 내용</Text>
       <TextInput
         style={styles.textInput}
@@ -47,19 +67,18 @@ export default function App() {
         onChangeText={setKakaoText}
         textAlignVertical="top"
       />
- 
+
       <TouchableOpacity
         style={[styles.button, !kakaoText && styles.buttonDisabled]}
         disabled={!kakaoText}
-        onPress={() =>
-          Alert.alert('분석 시작', '곧 타임라인 기능을 추가할게요!')
-        }>
+        onPress={sendToServer}
+      >
         <Text style={styles.buttonText}>여행 동선 분석하기</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
- 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
