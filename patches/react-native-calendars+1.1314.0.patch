@@ -1,0 +1,17 @@
+diff --git a/node_modules/react-native-calendars/src/dateutils.js b/node_modules/react-native-calendars/src/dateutils.js
+index 04001d3..0ab13d7 100644
+--- a/node_modules/react-native-calendars/src/dateutils.js
++++ b/node_modules/react-native-calendars/src/dateutils.js
+@@ -114,9 +114,9 @@ export function page(date, firstDayOfWeek = 0, showSixWeeks = false) {
+     if (day !== ldow) {
+         to.addDays((ldow + 7 - day) % 7);
+     }
+-    const daysForSixWeeks = (daysBefore + days.length) / 6 >= 6;
+-    if (showSixWeeks && !daysForSixWeeks) {
+-        to.addDays(7);
++    const numberOfWeeks = Math.ceil((daysBefore + days.length) / 7);
++    if (showSixWeeks && numberOfWeeks < 6) {
++        to.addDays((6 - numberOfWeeks) * 7);
+     }
+     if (isLTE(from, days[0])) {
+         before = fromTo(from, days[0]);
