@@ -63,6 +63,32 @@ const mapHtml = `
 
         var zoomControl = new kakao.maps.ZoomControl();
         map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+
+        // Listen for messages from React Native
+        window.addEventListener('message', function(event) {
+            try {
+                var data = JSON.parse(event.data);
+                if (data.type === 'MOVE_TO' && data.lat && data.lng) {
+                    var moveLatLon = new kakao.maps.LatLng(data.lat, data.lng);
+                    map.panTo(moveLatLon);
+                }
+            } catch (e) {
+                console.error('Failed to parse message:', e);
+            }
+        });
+
+        // For Android WebView
+        document.addEventListener('message', function(event) {
+            try {
+                var data = JSON.parse(event.data);
+                if (data.type === 'MOVE_TO' && data.lat && data.lng) {
+                    var moveLatLon = new kakao.maps.LatLng(data.lat, data.lng);
+                    map.panTo(moveLatLon);
+                }
+            } catch (e) {
+                console.error('Failed to parse message:', e);
+            }
+        });
     });
 </script>
 </body>
@@ -82,6 +108,18 @@ const ScheduleDetail = ({ onNavigate }: { onNavigate: (screen: string) => void }
 	const [scrollEnabled, setScrollEnabled] = React.useState(true);
 	const mapHeight = React.useRef(new Animated.Value(270)).current;
 	const lastMapHeight = React.useRef(270);
+	const webViewRef = React.useRef<WebView>(null);
+
+	const moveToLocation = (lat: number, lng: number) => {
+		if (webViewRef.current) {
+			const message = JSON.stringify({
+				type: 'MOVE_TO',
+				lat: lat,
+				lng: lng
+			});
+			webViewRef.current.postMessage(message);
+		}
+	};
 
 	const panResponder = React.useRef(
 		PanResponder.create({
@@ -119,14 +157,17 @@ const ScheduleDetail = ({ onNavigate }: { onNavigate: (screen: string) => void }
 
 			<Animated.View style={[styles.mapContainer, { height: mapHeight }]}>
 				<WebView
+					ref={webViewRef}
 					originWhitelist={['*']}
 					source={{ html: mapHtml }}
 					style={styles.map}
 					javaScriptEnabled={true}
 					domStorageEnabled={true}
 					userAgent="Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Mobile Safari/537.36"
-					onMouseEnter={() => Platform.OS === 'web' && setScrollEnabled(false)}
-					onMouseLeave={() => Platform.OS === 'web' && setScrollEnabled(true)}
+					{...({
+						onMouseEnter: () => Platform.OS === 'web' && setScrollEnabled(false),
+						onMouseLeave: () => Platform.OS === 'web' && setScrollEnabled(true),
+					} as any)}
 					onTouchStart={() => setScrollEnabled(false)}
 					onTouchEnd={() => setScrollEnabled(true)}
 				/>
@@ -157,8 +198,8 @@ const ScheduleDetail = ({ onNavigate }: { onNavigate: (screen: string) => void }
 				</View>
 			</View>
 
-			<ScrollView 
-				style={styles.scrollView} 
+			<ScrollView
+				style={styles.scrollView}
 				contentContainerStyle={styles.scrollContent}
 				scrollEnabled={scrollEnabled}
 			>
@@ -168,7 +209,11 @@ const ScheduleDetail = ({ onNavigate }: { onNavigate: (screen: string) => void }
 						<View style={styles.frame7}>
 							<Text style={[styles.text11, styles.textTypo]}>1</Text>
 						</View>
-						<View style={styles.frame8}>
+						<TouchableOpacity
+							style={styles.frame8}
+							onPress={() => moveToLocation(37.5759, 126.9768)}
+							activeOpacity={0.7}
+						>
 							<View style={styles.frame9}>
 								<Text style={[styles.text12, styles.textTypo1]}>오전 10:30</Text>
 								<Text style={[styles.text13, styles.textTypo]}>광화문</Text>
@@ -178,67 +223,79 @@ const ScheduleDetail = ({ onNavigate }: { onNavigate: (screen: string) => void }
 									<Image style={styles.iconLayout} resizeMode="cover" source={Icons.Kebab} />
 								</View>
 							</View>
-						</View>
+						</TouchableOpacity>
 					</View>
-						<View style={[styles.frame10, styles.frameFlexBox]}>
-							<View style={styles.frame7}>
-								<Text style={[styles.text11, styles.textTypo]}>2</Text>
-							</View>
-							<View style={[styles.frame12, styles.frameBorder]}>
-								<View style={styles.frame13}>
-									<View style={styles.frame14}>
-										<View style={[styles.icon7, styles.iconLayout]}>
-											<Image style={styles.iconLayout} resizeMode="cover" source={Icons.AI} />
-										</View>
-										<Text style={[styles.ai2, styles.aiClr]}>AI 추천</Text>
-									</View>
-									<Text style={[styles.text15, styles.textTypo1]}>오후 1:00</Text>
-									<Text style={[styles.text13, styles.textTypo]}>메가MGC커피 광화문점</Text>
-									<Text style={[styles.text16, styles.textLayout]}>현지인들이 추천하는 시그니처 플랫화이트 맛집</Text>
-								</View>
-								<View style={styles.button5}>
+					<View style={[styles.frame10, styles.frameFlexBox]}>
+						<View style={styles.frame7}>
+							<Text style={[styles.text11, styles.textTypo]}>2</Text>
+						</View>
+						<TouchableOpacity
+							style={[styles.frame12, styles.frameBorder]}
+							onPress={() => moveToLocation(37.5710, 126.9745)}
+							activeOpacity={0.8}
+						>
+							<View style={styles.frame13}>
+								<View style={styles.frame14}>
 									<View style={[styles.icon7, styles.iconLayout]}>
-										<Image style={styles.iconLayout} resizeMode="cover" source={Icons.Kebab} />
+										<Image style={styles.iconLayout} resizeMode="cover" source={Icons.AI} />
 									</View>
+									<Text style={[styles.ai2, styles.aiClr]}>AI 추천</Text>
+								</View>
+								<Text style={[styles.text15, styles.textTypo1]}>오후 1:00</Text>
+								<Text style={[styles.text13, styles.textTypo]}>메가MGC커피 광화문점</Text>
+								<Text style={[styles.text16, styles.textLayout]}>현지인들이 추천하는 시그니처 플랫화이트 맛집</Text>
+							</View>
+							<View style={styles.button5}>
+								<View style={[styles.icon7, styles.iconLayout]}>
+									<Image style={styles.iconLayout} resizeMode="cover" source={Icons.Kebab} />
 								</View>
 							</View>
-						</View>
-						<View style={[styles.frame15, styles.frameFlexBox]}>
-							<View style={styles.frame7}>
-								<Text style={[styles.text11, styles.textTypo]}>3</Text>
-							</View>
-							<View style={styles.frame8}>
-								<View style={styles.frame9}>
-									<Text style={[styles.text12, styles.textTypo1]}>오전 2:30</Text>
-									<Text style={[styles.text13, styles.textTypo]}>세종문화회관 예술의정원</Text>
-								</View>
-								<View style={styles.button5}>
-									<View style={[styles.icon7, styles.iconLayout]}>
-										<Image style={styles.iconLayout} resizeMode="cover" source={Icons.Kebab} />
-									</View>
-								</View>
-							</View>
-						</View>
-						<View style={[styles.frame19, styles.frameFlexBox]}>
-							<View style={styles.frame7}>
-								<Text style={[styles.text11, styles.textTypo]}>4</Text>
-							</View>
-							<View style={styles.frame8}>
-								<View style={styles.frame9}>
-									<Text style={[styles.text12, styles.textTypo1]}>오후 5:30</Text>
-									<Text style={[styles.text13, styles.textTypo]}>청진공원</Text>
-								</View>
-								<View style={styles.button5}>
-									<View style={[styles.icon7, styles.iconLayout]}>
-										<Image style={styles.iconLayout} resizeMode="cover" source={Icons.Kebab} />
-									</View>
-								</View>
-							</View>
-						</View>
-						<View style={[styles.frame23, styles.frameBorder]}>
-							<Text style={[styles.text23, styles.textTypo]}>+ 장소 추가하기</Text>
-						</View>
+						</TouchableOpacity>
 					</View>
+					<View style={[styles.frame15, styles.frameFlexBox]}>
+						<View style={styles.frame7}>
+							<Text style={[styles.text11, styles.textTypo]}>3</Text>
+						</View>
+						<TouchableOpacity
+							style={styles.frame8}
+							onPress={() => moveToLocation(37.5721, 126.9760)}
+							activeOpacity={0.7}
+						>
+							<View style={styles.frame9}>
+								<Text style={[styles.text12, styles.textTypo1]}>오전 2:30</Text>
+								<Text style={[styles.text13, styles.textTypo]}>세종문화회관 예술의정원</Text>
+							</View>
+							<View style={styles.button5}>
+								<View style={[styles.icon7, styles.iconLayout]}>
+									<Image style={styles.iconLayout} resizeMode="cover" source={Icons.Kebab} />
+								</View>
+							</View>
+						</TouchableOpacity>
+					</View>
+					<View style={[styles.frame19, styles.frameFlexBox]}>
+						<View style={styles.frame7}>
+							<Text style={[styles.text11, styles.textTypo]}>4</Text>
+						</View>
+						<TouchableOpacity
+							style={styles.frame8}
+							onPress={() => moveToLocation(37.5710, 126.9800)}
+							activeOpacity={0.7}
+						>
+							<View style={styles.frame9}>
+								<Text style={[styles.text12, styles.textTypo1]}>오후 5:30</Text>
+								<Text style={[styles.text13, styles.textTypo]}>청진공원</Text>
+							</View>
+							<View style={styles.button5}>
+								<View style={[styles.icon7, styles.iconLayout]}>
+									<Image style={styles.iconLayout} resizeMode="cover" source={Icons.Kebab} />
+								</View>
+							</View>
+						</TouchableOpacity>
+					</View>
+					<View style={[styles.frame23, styles.frameBorder]}>
+						<Text style={[styles.text23, styles.textTypo]}>+ 장소 추가하기</Text>
+					</View>
+				</View>
 			</ScrollView>
 
 			<View style={[styles.tabbar, styles.headerLayout]}>
