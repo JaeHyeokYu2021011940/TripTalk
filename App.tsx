@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import Login from './src/screens/Login';
 import Home from './src/screens/Home';
 import Import from './src/screens/Import';
 import Schedule from './src/screens/Schedule';
@@ -10,10 +11,12 @@ import ScheduleDetail from './src/screens/Schedule_Detail';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
-  const [currentScreen, setCurrentScreen] = useState('Home');
+  const [currentScreen, setCurrentScreen] = useState('Login');
 
   const renderScreen = () => {
     switch (currentScreen) {
+      case 'Login':
+        return <Login onNavigate={setCurrentScreen} />;
       case 'Home':
         return <Home onNavigate={setCurrentScreen} />;
       case 'Import':
@@ -25,7 +28,7 @@ function App() {
       case 'ScheduleDetail':
         return <ScheduleDetail onNavigate={setCurrentScreen} />;
       default:
-        return <Home onNavigate={setCurrentScreen} />;
+        return <Login onNavigate={setCurrentScreen} />;
     }
   };
 
