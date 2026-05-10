@@ -45,8 +45,8 @@ const Login = ({ onNavigate }: any) => {
                   secureTextEntry={!isPasswordVisible}
                   autoCapitalize="none"
                 />
-                <TouchableOpacity 
-                  style={[styles.icon, styles.iconLayout]} 
+                <TouchableOpacity
+                  style={[styles.icon, styles.iconLayout]}
                   activeOpacity={0.7}
                   onPress={() => setIsPasswordVisible(!isPasswordVisible)}
                 >
@@ -63,7 +63,7 @@ const Login = ({ onNavigate }: any) => {
         </View>
         <View style={[styles.frame5, styles.frameSpaceBlock]}>
           <Text style={[styles.text9, styles.textTypo]}>계정이 없으신가요?</Text>
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity activeOpacity={0.7} onPress={() => onNavigate && onNavigate('Signup')}>
             <Text style={[styles.text10, styles.textTypo]}>회원가입</Text>
           </TouchableOpacity>
         </View>
@@ -91,8 +91,8 @@ const Login = ({ onNavigate }: any) => {
           </TouchableOpacity>
         </View>
         <View style={styles.frame8}>
-          <TouchableOpacity 
-            style={styles.button5} 
+          <TouchableOpacity
+            style={styles.button5}
             activeOpacity={0.7}
             onPress={() => onNavigate && onNavigate('Home')}
           >

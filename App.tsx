@@ -8,6 +8,7 @@ import Import from './src/screens/Import';
 import Schedule from './src/screens/Schedule';
 import Notification from './src/screens/Notification';
 import ScheduleDetail from './src/screens/Schedule_Detail';
+import Signup from './src/screens/Signup';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -17,6 +18,8 @@ function App() {
     switch (currentScreen) {
       case 'Login':
         return <Login onNavigate={setCurrentScreen} />;
+      case 'Signup':
+        return <Signup onNavigate={setCurrentScreen} />;
       case 'Home':
         return <Home onNavigate={setCurrentScreen} />;
       case 'Import':
