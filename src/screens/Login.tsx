@@ -57,7 +57,7 @@ const Login = ({ onNavigate }: any) => {
           </View>
         </View>
         <View style={styles.frameSpaceBlock}>
-          <TouchableOpacity style={styles.button} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.button} activeOpacity={0.7} onPress={() => onNavigate('Home')}>
             <Text style={[styles.text8, styles.textTypo1]}>로그인</Text>
           </TouchableOpacity>
         </View>

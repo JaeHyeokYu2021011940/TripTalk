@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StatusBar, StyleSheet, useColorScheme, View, NativeModules } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import Login from './src/screens/Login';
@@ -13,6 +13,16 @@ import Signup from './src/screens/Signup';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [currentScreen, setCurrentScreen] = useState('Login');
+
+  useEffect(() => {
+    if (NativeModules.IntentModule) {
+      NativeModules.IntentModule.getSharedText((text: string | null) => {
+        if (text) {
+          setCurrentScreen('Import');
+        }
+      });
+    }
+  }, []);
 
   const renderScreen = () => {
     switch (currentScreen) {
