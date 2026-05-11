@@ -75,9 +75,10 @@ class IntentModule(private val reactContext: ReactApplicationContext) :
         val activity = reactContext.currentActivity ?: return callback(null)
         filePickerCallback = callback
 
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "*/*"
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
+            type = "text/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("text/plain", "text/*", "*/*"))
         }
 
         activity.startActivityForResult(
