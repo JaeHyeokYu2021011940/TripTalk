@@ -59,7 +59,7 @@ const Import = ({ onNavigate }: { onNavigate: (screen: string) => void }) => {
       const data = await response.json();
       console.log('서버 응답:', data);
 
-      Alert.alert('성공', '일정 생성 완료!');
+      onNavigate('ScheduleDetail');
     } catch (error) {
       console.log('서버 연결 오류:', error);
       Alert.alert('오류', '백엔드 연결 실패');
@@ -250,12 +250,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-
     backgroundColor: 'rgba(0,0,0,0.35)',
-
     alignItems: 'center',
     justifyContent: 'center',
-
+    paddingBottom: 120,
     zIndex: 999,
   },
 
