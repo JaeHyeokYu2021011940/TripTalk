@@ -1,5 +1,12 @@
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
-import { StatusBar, StyleSheet, useColorScheme, View, NativeModules } from 'react-native';
+import {
+  StatusBar,
+  StyleSheet,
+  useColorScheme,
+  View,
+  NativeModules,
+} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import Login from './src/screens/Login';
@@ -46,12 +53,12 @@ function App() {
   };
 
   return (
-    <SafeAreaProvider style={{ flex: 1 }}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <View style={styles.container}>
-        {renderScreen()}
-      </View>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider style={{ flex: 1 }}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        <View style={styles.container}>{renderScreen()}</View>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

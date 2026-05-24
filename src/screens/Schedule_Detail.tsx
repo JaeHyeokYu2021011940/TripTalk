@@ -7,12 +7,12 @@ import {
   ImageBackground,
   Image,
   TouchableOpacity,
-  ScrollView,
   Platform,
   PanResponder,
   Animated,
   Dimensions,
 } from 'react-native';
+import DraggableFlatList from 'react-native-draggable-flatlist';
 import { WebView } from 'react-native-webview';
 import { Icons, Images } from '../assets';
 
@@ -105,7 +105,12 @@ const createMapHtml = (positions: any[]) => `
 </html>
 `;
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const LIST_HORIZONTAL_PADDING = 16;
+const TIMELINE_NUMBER_WIDTH = 46;
+const CARD_WIDTH =
+  SCREEN_WIDTH - LIST_HORIZONTAL_PADDING * 2 - TIMELINE_NUMBER_WIDTH;
 const HEADER_HEIGHT = 113;
 const TABBAR_HEIGHT = 90;
 const TIMELINE_TITLE_AREA = 110; // Approximate height of "내 일정 타임라인" title + tabs
@@ -137,23 +142,32 @@ const ScheduleDetail = ({
         setTripPlan(data);
 
         // 지도 마커용: 위도/경도 있는 것만
-        const markerPositions = data.days
-          .flatMap((day: any) => day.events)
-          .map((event: any, index: number) => ({
-            label: String(index + 1),
-            title: event.place_name,
-            lat: event.latitude,
-            lng: event.longitude,
-            time: event.time,
-          }))
-          .filter((event: any) => event.lat && event.lng);
-
-        setPositions(markerPositions);
+        setPositions(makeMarkerPositions(data.days));
       })
       .catch(error => {
         console.log('일정 조회 실패:', error);
       });
   }, []);
+  const makeMarkerPositions = (days: any[]) => {
+    let count = 0;
+
+    return days
+      .flatMap((day: any) =>
+        day.events.map((event: any) => {
+          count += 1;
+
+          return {
+            label: String(count),
+            title: event.place_name,
+            lat: event.latitude,
+            lng: event.longitude,
+            time: event.time,
+          };
+        }),
+      )
+      .filter((event: any) => event.lat && event.lng);
+  };
+
   const moveToLocation = (lat: number, lng: number) => {
     if (webViewRef.current) {
       const message = JSON.stringify({
@@ -221,6 +235,7 @@ const ScheduleDetail = ({
 
       <Animated.View style={[styles.mapContainer, { height: mapHeight }]}>
         <WebView
+          key={JSON.stringify(positions)}
           ref={webViewRef}
           originWhitelist={['*']}
           source={{ html: createMapHtml(positions) }}
@@ -275,78 +290,105 @@ const ScheduleDetail = ({
           })}
         </View>
       </View>
+      <View style={styles.listWrapper}>
+        <DraggableFlatList
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+          data={timelineEvents}
+          scrollEnabled={true}
+          keyExtractor={(item: any, index: number) => String(item.id || index)}
+          activationDistance={0}
+          onDragEnd={({ data }) => {
+            const newDays = [...tripPlan.days];
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        scrollEnabled={scrollEnabled}
-      >
-        <View style={[styles.frame5, styles.frameBg]}>
-          <View
-            style={[
-              styles.verticalDivider,
-              {
-                height: Math.max(0, (timelineEvents.length - 1) * 90),
-              },
-            ]}
-          />
+            newDays[selectedDayIndex] = {
+              ...newDays[selectedDayIndex],
+              events: data,
+            };
 
-          {timelineEvents.map((event: any, index: number) => (
-            <View
-              key={event.id || index}
-              style={[styles.frameFlexBox, { zIndex: index + 1 }]}
-            >
-              <View style={styles.frame7}>
-                <Text style={[styles.text11, styles.textTypo]}>
-                  {previousEventCount + index + 1}
-                </Text>
-              </View>
+            const newTripPlan = {
+              ...tripPlan,
+              days: newDays,
+            };
 
-              <TouchableOpacity
-                style={styles.frame8}
-                onPress={() => {
-                  if (event.latitude && event.longitude) {
-                    moveToLocation(event.latitude, event.longitude);
-                  }
-                }}
-                activeOpacity={0.7}
+            setTripPlan(newTripPlan);
+
+            // 지도 숫자 다시 생성
+            setPositions(makeMarkerPositions(newDays));
+          }}
+          renderItem={({ item, getIndex, drag, isActive }) => {
+            const index = getIndex() ?? 0;
+
+            return (
+              <View
+                style={[styles.frameFlexBox, isActive && styles.draggingCard]}
               >
-                <View style={styles.frame9}>
-                  <Text style={[styles.text12, styles.textTypo1]}>
-                    {event.time || '시간 미정'}
+                <View style={styles.frame7}>
+                  <Text style={[styles.text11, styles.textTypo]}>
+                    {previousEventCount + index + 1}
                   </Text>
+                </View>
 
-                  <Text style={[styles.text13, styles.textTypo]}>
-                    {event.place_name}
-                  </Text>
-
-                  {event.activity ? (
-                    <Text style={[styles.text16, styles.textLayout]}>
-                      {event.activity}
+                <TouchableOpacity
+                  style={styles.frame8}
+                  onPress={() => {
+                    if (item.latitude && item.longitude) {
+                      moveToLocation(item.latitude, item.longitude);
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.frame9}>
+                    <Text style={[styles.text12, styles.textTypo1]}>
+                      {item.time || '시간 미정'}
                     </Text>
-                  ) : null}
-                </View>
 
-                <View style={styles.button5}>
-                  <View style={[styles.icon7, styles.iconLayout]}>
-                    <Image
-                      style={styles.iconLayout}
-                      resizeMode="cover"
-                      source={Icons.Kebab}
-                    />
+                    <Text style={[styles.text13, styles.textTypo]}>
+                      {item.place_name}
+                    </Text>
+
+                    {item.activity ? (
+                      <Text style={[styles.text16, styles.textLayout]}>
+                        {item.activity}
+                      </Text>
+                    ) : null}
                   </View>
-                </View>
-              </TouchableOpacity>
-            </View>
-          ))}
 
-          <View style={[styles.frame23, styles.frameBorder]}>
-            <Text style={[styles.text23, styles.textTypo]}>
-              + 장소 추가하기
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
+                  <TouchableOpacity
+                    style={styles.dragButton}
+                    onLongPress={drag}
+                    delayLongPress={250}
+                    disabled={isActive}
+                    activeOpacity={0.8}
+                    hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                  >
+                    <View style={styles.dragHandle}>
+                      <View style={styles.dragColumn}>
+                        <View style={styles.dragDot} />
+                        <View style={styles.dragDot} />
+                        <View style={styles.dragDot} />
+                      </View>
+
+                      <View style={styles.dragColumn}>
+                        <View style={styles.dragDot} />
+                        <View style={styles.dragDot} />
+                        <View style={styles.dragDot} />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
+            );
+          }}
+          ListFooterComponent={
+            <TouchableOpacity style={styles.addPlaceButton} activeOpacity={0.8}>
+              <Text style={[styles.text23, styles.textTypo]}>
+                + 장소 추가하기
+              </Text>
+            </TouchableOpacity>
+          }
+        />
+      </View>
 
       <View style={styles.tabbar}>
         <View style={[styles.button10, styles.frame12Layout]}>
@@ -413,11 +455,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.white,
     alignSelf: 'stretch',
   },
-  frameFlexBox: {
-    gap: 10,
-    flexDirection: 'row',
-    alignSelf: 'stretch',
-  },
   textTypo: {
     lineHeight: 24,
     fontWeight: '500',
@@ -453,13 +490,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     flex: 1,
   },
-  scrollView: {
+  list: {
     width: '100%',
-    flex: 1,
+    backgroundColor: Colors.background.white,
   },
-  scrollContent: {
+
+  listContent: {
+    paddingHorizontal: LIST_HORIZONTAL_PADDING,
+    paddingTop: 16,
     paddingBottom: 40,
-    flexGrow: 1,
+  },
+
+  addPlaceButton: {
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FBFF',
   },
   scheduleDetail: {
     backgroundColor: Colors.background.primary,
@@ -578,20 +628,13 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 24,
   },
-  verticalDivider: {
-    width: 2,
-    top: 34,
-    left: 34,
-    backgroundColor: Colors.primary,
-    position: 'absolute',
-    zIndex: 0,
-  },
   frame6: {
     zIndex: 1,
   },
   frame7: {
     height: 36,
     width: 36,
+    marginRight: 10,
     borderRadius: 9999,
     borderColor: Colors.background.white,
     borderWidth: 4,
@@ -605,13 +648,10 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     color: Colors.background.white,
   },
-  frame8: {
-    flexDirection: 'row',
-    flex: 1,
-  },
   frame9: {
     overflow: 'hidden',
     flex: 1,
+    paddingRight: 8,
   },
   text12: {
     color: Colors.text.secondary,
@@ -781,6 +821,84 @@ const styles = StyleSheet.create({
     height: 24,
     justifyContent: 'center',
     alignSelf: 'stretch',
+  },
+
+  dragIcon: {
+    width: 18,
+    height: 24,
+  },
+  frameFlexBox: {
+    width: SCREEN_WIDTH - LIST_HORIZONTAL_PADDING * 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  frame8: {
+    width: CARD_WIDTH,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.white,
+    borderWidth: 1,
+    borderColor: Colors.border.default,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingLeft: 14,
+    paddingRight: 14,
+    minHeight: 84,
+  },
+
+  draggingCard: {
+    opacity: 0.95,
+    transform: [{ scale: 1.03 }],
+    elevation: 8,
+  },
+  rightButtons: {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+
+  menuButton: {
+    padding: 4,
+  },
+
+  dragButton: {
+    width: 36,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    marginLeft: 8,
+  },
+
+  dragText: {
+    fontSize: 18,
+    color: Colors.text.secondary,
+    fontWeight: '600',
+  },
+
+  kebabIcon: {
+    width: 16,
+    height: 16,
+  },
+  dragHandle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dragColumn: {
+    height: 16,
+    justifyContent: 'space-between',
+  },
+  dragDot: {
+    width: 3.5,
+    height: 3.5,
+    borderRadius: 999,
+    backgroundColor: '#B8B8B8',
+  },
+  listWrapper: {
+    flex: 1,
+    width: '100%',
   },
 });
 
