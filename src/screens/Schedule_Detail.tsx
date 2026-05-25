@@ -134,7 +134,7 @@ const ScheduleDetail = ({
   const webViewRef = React.useRef<WebView>(null);
 
   React.useEffect(() => {
-    fetch('http://10.0.2.2:8000/api/trip-plans/4/')
+    fetch('http://10.0.2.2:8000/api/trip-plans/12/')
       .then(res => res.json())
       .then(data => {
         console.log('일정 데이터:', data);
