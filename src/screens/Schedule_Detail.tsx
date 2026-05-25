@@ -134,7 +134,7 @@ const ScheduleDetail = ({
   const webViewRef = React.useRef<WebView>(null);
 
   React.useEffect(() => {
-    fetch('http://10.0.2.2:8000/api/trip-plans/42/')
+    fetch('http://10.0.2.2:8000/api/trip-plans/4/')
       .then(res => res.json())
       .then(data => {
         console.log('일정 데이터:', data);
@@ -323,14 +323,22 @@ const ScheduleDetail = ({
               <View
                 style={[styles.frameFlexBox, isActive && styles.draggingCard]}
               >
-                <View style={styles.frame7}>
+                <View
+                  style={[
+                    styles.frame7,
+                    item.is_recommended && styles.recommendedNumber,
+                  ]}
+                >
                   <Text style={[styles.text11, styles.textTypo]}>
                     {previousEventCount + index + 1}
                   </Text>
                 </View>
 
                 <TouchableOpacity
-                  style={styles.frame8}
+                  style={[
+                    styles.frame8,
+                    item.is_recommended && styles.recommendedCard,
+                  ]}
                   onPress={() => {
                     if (item.latitude && item.longitude) {
                       moveToLocation(item.latitude, item.longitude);
@@ -339,10 +347,18 @@ const ScheduleDetail = ({
                   activeOpacity={0.7}
                 >
                   <View style={styles.frame9}>
-                    <Text style={[styles.text12, styles.textTypo1]}>
-                      {item.time || '시간 미정'}
-                    </Text>
-
+                    {!item.is_recommended && (
+                      <Text style={[styles.text12, styles.textTypo1]}>
+                        {item.time || '시간 미정'}
+                      </Text>
+                    )}
+                    {item.is_recommended && (
+                      <View style={styles.recommendBadge}>
+                        <Text style={styles.recommendBadgeText}>
+                          자동 추천 ✨
+                        </Text>
+                      </View>
+                    )}
                     <Text style={[styles.text13, styles.textTypo]}>
                       {item.place_name}
                     </Text>
@@ -899,6 +915,27 @@ const styles = StyleSheet.create({
   listWrapper: {
     flex: 1,
     width: '100%',
+  },
+  recommendedCard: {
+    backgroundColor: '#EEF4FF',
+    borderColor: '#7DA7FF',
+  },
+
+  recommendedNumber: {
+    backgroundColor: '#7DA7FF',
+  },
+
+  recommendBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#3B82F6',
+  },
+  recommendBadge: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#4F83FF',
+    paddingLeft: 8,
+    marginBottom: 6,
+    alignSelf: 'flex-start',
   },
 });
 
