@@ -20,6 +20,7 @@ import Signup from './src/screens/Signup';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [currentScreen, setCurrentScreen] = useState('Login');
+  const [tripPlanId, setTripPlanId] = useState<number | null>(null);
 
   useEffect(() => {
     if (NativeModules.IntentModule) {
@@ -40,13 +41,23 @@ function App() {
       case 'Home':
         return <Home onNavigate={setCurrentScreen} />;
       case 'Import':
-        return <Import onNavigate={setCurrentScreen} />;
+        return (
+          <Import
+            onNavigate={setCurrentScreen}
+            setTripPlanId={setTripPlanId}
+          />
+        );
       case 'Schedule':
         return <Schedule onNavigate={setCurrentScreen} />;
       case 'Notification':
         return <Notification onNavigate={setCurrentScreen} />;
       case 'ScheduleDetail':
-        return <ScheduleDetail onNavigate={setCurrentScreen} />;
+        return (
+          <ScheduleDetail
+            onNavigate={setCurrentScreen}
+            tripPlanId={tripPlanId}
+          />
+        );
       default:
         return <Login onNavigate={setCurrentScreen} />;
     }

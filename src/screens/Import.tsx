@@ -18,7 +18,13 @@ import TopBar from '../components/TopBar';
 import BottomTabBar from '../components/BottomTabBar';
 import { Icons } from '../assets';
 
-const Import = ({ onNavigate }: { onNavigate: (screen: string) => void }) => {
+const Import = ({
+  onNavigate,
+  setTripPlanId,
+}: {
+  onNavigate: (screen: string) => void;
+  setTripPlanId: (id: number) => void;
+}) => {
   const [kakaoText, setKakaoText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,7 +64,7 @@ const Import = ({ onNavigate }: { onNavigate: (screen: string) => void }) => {
 
       const data = await response.json();
       console.log('서버 응답:', data);
-
+      setTripPlanId(data.trip_plan_id);
       onNavigate('ScheduleDetail');
     } catch (error) {
       console.log('서버 연결 오류:', error);

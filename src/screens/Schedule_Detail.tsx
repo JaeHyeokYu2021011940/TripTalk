@@ -122,8 +122,10 @@ const MAP_MIN_HEIGHT_LIMIT = -40; // Allow it to hide completely under the heade
 
 const ScheduleDetail = ({
   onNavigate,
+  tripPlanId,
 }: {
   onNavigate: (screen: string) => void;
+  tripPlanId: number | null;
 }) => {
   const [scrollEnabled, setScrollEnabled] = React.useState(true);
   const [tripPlan, setTripPlan] = React.useState<any>(null);
@@ -134,7 +136,10 @@ const ScheduleDetail = ({
   const webViewRef = React.useRef<WebView>(null);
 
   React.useEffect(() => {
-    fetch('http://10.0.2.2:8000/api/trip-plans/12/')
+    console.log('ScheduleDetail tripPlanId:', tripPlanId);
+    if (!tripPlanId) return;
+
+    fetch(`http://10.0.2.2:8000/api/trip-plans/${tripPlanId}/`)
       .then(res => res.json())
       .then(data => {
         console.log('일정 데이터:', data);
@@ -147,7 +152,7 @@ const ScheduleDetail = ({
       .catch(error => {
         console.log('일정 조회 실패:', error);
       });
-  }, []);
+  }, [tripPlanId]);
   const makeMarkerPositions = (days: any[]) => {
     let count = 0;
 
